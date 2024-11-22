@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    container_name: longdevlor_db
+    environment:
+      POSTGRES_USER: longdevlor
+      POSTGRES_PASSWORD: longdev
+      POSTGRES_DB: longdevlor
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./db_data:/var/lib/postgresql/data
+      - ./init_schema:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+
+  adminer:
+    image: adminer
+    container_name: longdevlor_adminer
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  redis:
+    image: redis:latest
+    container_name: longdevlor_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis_data:/data
+    restart: unless-stopped
+

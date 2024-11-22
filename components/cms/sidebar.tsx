@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Film, Tv, Users, BarChart } from "lucide-react";
+import { ChevronRight, Film, Tv, Users, BarChart, Image } from "lucide-react";
 
 export default function Sidebar() {
   const [selectedMenu, setSelectedMenu] = useState("dashboard");
@@ -31,6 +31,12 @@ export default function Sidebar() {
       icon: <Users className="w-5 h-5" />,
       path: "/cms/users", 
       id: "users"
+    },
+    {
+      name: "Images",
+      icon: <Image className="w-5 h-5" />,
+      path: "/cms/images",
+      id: "images"
     }
   ];
 
