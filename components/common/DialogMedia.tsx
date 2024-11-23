@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -40,7 +40,7 @@ export const DialogMedia: React.FC<DialogMediaProps> = ({
 
   const { toast } = useToast();
 
-  const { data, error, isLoading, mutate } = useSWR<{
+  const { data, isLoading, mutate } = useSWR<{
     data: ImageType[];
     pagination: { totalPages: number };
   }>(`/api/images?page=${page}&limit=12${searchQuery ? `&search=${searchQuery}` : ''}`, fetcher);
@@ -115,6 +115,7 @@ export const DialogMedia: React.FC<DialogMediaProps> = ({
                     title: "Thành công",
                     description: "Tải lên ảnh thành công"
                   });
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 } catch (error) {
                   toast({
                     title: "Lỗi",
