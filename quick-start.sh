@@ -1,6 +1,9 @@
 #!/bin/bash
 docker compose down
 if [ "$1" = "clean" ]; then
+    docker stop $(docker ps -q) && docker rm $(docker ps -aq) && docker network prune -f
+
+
     echo "Cleaning up data directories..."
     
     if [ -d "db_data" ]; then
