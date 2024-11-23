@@ -18,9 +18,11 @@ export async function POST(request: Request) {
     // Check if input is email or username
     const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username);
     
-    // Find user by email or username
+    // Find user by email or username and join with roles table
     const user = await db('users')
-      .where(isEmail ? 'email' : 'username', username)
+      .select('users.*', 'roles.name as roleName', 'roles.id as roleId')
+      .leftJoin('roles', 'users.role_id', 'roles.id')
+      .where(isEmail ? 'users.email' : 'users.username', username)
       .first();
 
     if (!user) {
@@ -40,12 +42,14 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create JWT token
+    // Create JWT token with role information
     const token = jwt.sign(
       { 
         id: user.id,
         email: user.email,
-        username: user.username
+        username: user.username,
+        roleId: user.roleId,
+        roleName: user.roleName
       },
       process.env.JWT_SECRET!,
       { expiresIn: process.env.JWT_EXPIRES_IN }
@@ -60,7 +64,7 @@ export async function POST(request: Request) {
     });
 
     // Set cookie
-    response.cookies.set('_sess_auth', token, {
+    response.cookies.set(process.env.COOKIE_NAME || '_sess_auth', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',

@@ -44,7 +44,7 @@ export default function LoginPage() {
         throw new Error(data.message || 'Something went wrong');
       }
 
-      router.push('/dashboard'); // Redirect to dashboard after successful login
+      router.push('/'); 
     } catch (err: any) {
       setError(err.message);
     } finally {
