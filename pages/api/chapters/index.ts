@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 // GET /api/chapters
 async function handleGet(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { page = 1, limit = 10, movie_id, search } = req.query;
+    const { page = 1, limit = 10, movie_id, search, status = 'all' } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
     let query = db('chapters')
@@ -48,20 +48,39 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
       query = query.where('chapters.movie_id', movie_id as string);
     }
 
+    if (status !== 'all') {
+      query = query.where('chapters.status', Number(status));
+    }
+
     if (search) {
       query = query.where((builder) => {
         builder
-          .where('chapters.title', 'ilike', `%${search}%`)
-          .orWhere('chapters.chapter_number', 'ilike', `%${search}%`)
-          .orWhere('movies.title', 'ilike', `%${search}%`);
+          .whereILike('chapters.title', `%${search}%`)
+          .orWhereRaw('CAST(chapters.chapter_number AS TEXT) ILIKE ?', [`%${search}%`])
+          .orWhereILike('movies.title', `%${search}%`);
       });
     }
 
+    let countQuery = db('chapters')
+      .where('chapters.status', '!=', Status.DELETED);
+
+    if (status !== 'all') {
+      countQuery = countQuery.where('chapters.status', Number(status));
+    }
+
+    if (search) {
+      countQuery = countQuery
+        .leftJoin('movies', 'chapters.movie_id', 'movies.id')
+        .where((builder) => {
+          builder
+            .whereILike('chapters.title', `%${search}%`)
+            .orWhereRaw('CAST(chapters.chapter_number AS TEXT) ILIKE ?', [`%${search}%`])
+            .orWhereILike('movies.title', `%${search}%`);
+        });
+    }
+
     const [totalItems, items] = await Promise.all([
-      db('chapters')
-        .where('status', '!=', Status.DELETED)
-        .count('* as count')
-        .first(),
+      countQuery.count('* as count').first(),
       query.limit(Number(limit)).offset(offset)
     ]);
 
