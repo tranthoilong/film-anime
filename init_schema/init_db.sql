@@ -125,6 +125,7 @@ CREATE TABLE Episodes
     UNIQUE (movie_id, chapter_id, slug) -- Đảm bảo slug không trùng lặp trong chương/phim
 );
 
+
 CREATE TABLE VideoLinks
 (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
