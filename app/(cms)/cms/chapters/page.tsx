@@ -2,35 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { Status } from "@/lib/types/enumStatus";
+import { StatusChanger } from "@/components/common/StatusChanger";
+import { SelectFilterDataTable } from '@/components/common/SelectFilterDataTable';
+import { DataTable } from '@/components/common/DataTable';
+import { DataTablePagination } from '@/components/common/DataTablePagination';
 
 interface Chapter {
   id: string;
@@ -49,15 +30,7 @@ interface PaginationData {
   currentPage: number;
   totalPages: number;
   totalItems: number;
-  limit: number;
-}
-
-interface ApiResponse {
-  statusCode: number;
-  data: {
-    data: Chapter[];
-    pagination: PaginationData;
-  };
+  pageSize: number;
 }
 
 export default function ChaptersPage() {
@@ -66,18 +39,21 @@ export default function ChaptersPage() {
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
-    limit: 10
+    pageSize: 10
   });
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [limit, setLimit] = useState<string>("10");
 
-  const fetchChapters = async (page = 1, searchTerm = '') => {
+  const fetchChapters = async (page = 1, searchTerm = '', status = 'all') => {
     try {
       setLoading(true);
+      const statusQuery = status !== 'all' ? `&status=${status}` : '';
       const response = await fetch(
-        `/api/chapters?page=${page}&limit=${pagination.limit}&search=${searchTerm}`
+        `/api/chapters?page=${page}&limit=${limit}&search=${searchTerm}${statusQuery}`
       );
-      const data: ApiResponse = await response.json();
+      const data = await response.json();
       
       if (data.statusCode === 200) {
         setChapters(data.data.data);
@@ -91,27 +67,75 @@ export default function ChaptersPage() {
   };
 
   useEffect(() => {
-    fetchChapters(1, search);
-  }, [search]);
+    fetchChapters(1, search, statusFilter);
+  }, [search, statusFilter, limit]);
 
   const handlePageChange = (page: number) => {
-    fetchChapters(page, search);
+    fetchChapters(page, search, statusFilter);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+  const handleStatusChange = async (chapterId: string) => {
+    await fetchChapters(pagination.currentPage, search, statusFilter);
   };
+
+  const columns = [
+    {
+      header: "Chương",
+      accessor: (chapter: Chapter) => (
+        <div>
+          <div className="font-medium hover:text-primary cursor-pointer">Chương {chapter.chapter_number}</div>
+          <div className="text-sm text-muted-foreground">{chapter.title}</div>
+        </div>
+      )
+    },
+    {
+      header: "Phim",
+      accessor: (chapter: Chapter) => chapter.movie_title
+    },
+    {
+      header: "Ngày Tạo",
+      accessor: (chapter: Chapter) => new Date(chapter.created_at).toLocaleDateString('vi-VN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    },
+    {
+      header: "Trạng Thái",
+      accessor: (chapter: Chapter) => (
+        <Badge variant={chapter.status === 1 ? "default" : "destructive"} className="font-medium">
+          {chapter.status === 1 ? 'Hoạt Động' : 'Không Hoạt Động'}
+        </Badge>
+      )
+    },
+    {
+      header: "Thao Tác",
+      accessor: (chapter: Chapter) => (
+        <div className="flex items-center justify-end gap-2">
+          <Button variant="ghost" size="icon" asChild className="hover:bg-primary/10">
+            <Link href={`/cms/chapters/${chapter.id}`}>
+              <Pencil className="w-4 h-4" />
+            </Link>
+          </Button>
+          <StatusChanger 
+            id={chapter.id}
+            status={Status.DELETED}
+            table="chapters"
+            onSuccess={() => handleStatusChange(chapter.id)}
+            icon={<Trash2 className="w-4 h-4 text-destructive" />}
+          />
+        </div>
+      ),
+      className: "text-right"
+    }
+  ];
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Danh Sách Chương</h1>
         <Button asChild>
-          <Link href="/cms/chapters/create">
+          <Link href="/cms/chapters/create" className="hover:bg-primary/90 transition-colors">
             <Plus className="w-4 h-4 mr-2" />
             Thêm Chương Mới
           </Link>
@@ -120,119 +144,52 @@ export default function ChaptersPage() {
 
       <Card className="p-4">
         <div className="flex gap-4 mb-6">
-          <div className="flex-1">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" />
             <Input
               placeholder="Tìm kiếm chương..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="max-w-sm"
+              className="pl-10 max-w-sm"
             />
           </div>
-          <Select defaultValue="10">
-            <SelectTrigger className="w-[100px]">
-              <SelectValue placeholder="10 mục" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10 mục</SelectItem>
-              <SelectItem value="20">20 mục</SelectItem>
-              <SelectItem value="50">50 mục</SelectItem>
-            </SelectContent>
-          </Select>
+          
+          <SelectFilterDataTable
+            value={statusFilter}
+            onValueChange={setStatusFilter}
+            data={[
+              { id: "1", name: "Hoạt động" },
+              { id: "0", name: "Không hoạt động" }
+            ]}
+            placeholder="Trạng thái"
+            width="180px"
+          />
+
+          <SelectFilterDataTable
+            value={limit}
+            onValueChange={setLimit}
+            data={[
+              { id: "10", name: "10 mục" },
+              { id: "20", name: "20 mục" },
+              { id: "50", name: "50 mục" }
+            ]}
+            placeholder="Số mục"
+            hasAll={false}
+            width="120px"
+          />
         </div>
 
-        {loading ? (
-          <div className="flex justify-center items-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-          </div>
-        ) : (
-          <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Chương</TableHead>
-                  <TableHead>Phim</TableHead>
-                  <TableHead>Ngày Tạo</TableHead>
-                  <TableHead>Trạng Thái</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {chapters.map((chapter) => (
-                  <TableRow key={chapter.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">Chương {chapter.chapter_number}</div>
-                        <div className="text-sm text-muted-foreground">{chapter.title}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{chapter.movie_title}</TableCell>
-                    <TableCell>{formatDate(chapter.created_at)}</TableCell>
-                    <TableCell>
-                      <Badge variant={chapter.status === 1 ? "default" : "destructive"}>
-                        {chapter.status === 1 ? 'Hoạt Động' : 'Không Hoạt Động'}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+        <DataTable
+          data={chapters}
+          columns={columns}
+          loading={loading}
+        />
 
-            <div className="mt-4 flex items-center justify-between px-2">
-              <div className="text-sm text-muted-foreground">
-                Hiển thị {(pagination.currentPage - 1) * pagination.limit + 1} đến{' '}
-                {Math.min(pagination.currentPage * pagination.limit, pagination.totalItems)} trong tổng số{' '}
-                {pagination.totalItems} kết quả
-              </div>
-              
-              <Pagination>
-                <PaginationContent>
-                  {pagination.currentPage > 1 && (
-                    <PaginationItem>
-                      <PaginationPrevious 
-                        href="#" 
-                        onClick={() => handlePageChange(pagination.currentPage - 1)} 
-                      />
-                    </PaginationItem>
-                  )}
-
-                  {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => {
-                    if (
-                      page === 1 ||
-                      page === pagination.totalPages ||
-                      (page >= pagination.currentPage - 1 && page <= pagination.currentPage + 1)
-                    ) {
-                      return (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            href="#"
-                            onClick={() => handlePageChange(page)}
-                            isActive={page === pagination.currentPage}
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                    } else if (
-                      page === pagination.currentPage - 2 ||
-                      page === pagination.currentPage + 2
-                    ) {
-                      return <PaginationEllipsis key={page} />;
-                    }
-                    return null;
-                  })}
-
-                  {pagination.currentPage < pagination.totalPages && (
-                    <PaginationItem>
-                      <PaginationNext 
-                        href="#" 
-                        onClick={() => handlePageChange(pagination.currentPage + 1)} 
-                      />
-                    </PaginationItem>
-                  )}
-                </PaginationContent>
-              </Pagination>
-            </div>
-          </>
-        )}
+        <DataTablePagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          onPageChange={handlePageChange}
+        />
       </Card>
     </div>
   );

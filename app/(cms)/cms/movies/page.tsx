@@ -2,46 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Search, Pencil, Trash2, Filter } from 'lucide-react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import Image from "next/image";
 import { Status } from "@/lib/types/enumStatus";
 import { StatusChanger } from "@/components/common/StatusChanger";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { movieTypes } from '@/lib/configs/config.json';
 import { SelectFilterDataTable } from '@/components/common/SelectFilterDataTable';
+import { DataTable } from '@/components/common/DataTable';
+import { DataTablePagination } from '@/components/common/DataTablePagination';
 
 interface Movie {
   id: string;
@@ -114,6 +86,77 @@ export default function MoviesPage() {
     await fetchMovies(pagination.currentPage, search, statusFilter, typeFilter);
   };
 
+  const columns = [
+    {
+      header: "Tên Phim",
+      accessor: (movie: Movie) => (
+        <div className="flex gap-4">
+          {movie.image_url ? (
+            <Image 
+              src={movie.image_url}
+              alt={movie.title}
+              width={80}
+              height={120}
+              className="object-cover rounded shadow-sm"
+            />
+          ) : (
+            <div className="w-[80px] h-[120px] bg-muted rounded flex items-center justify-center">
+              <span className="text-muted-foreground">No image</span>
+            </div>
+          )}
+          <div>
+            <div className="font-medium hover:text-primary cursor-pointer">{movie.title}</div>
+            <div className="text-sm text-muted-foreground line-clamp-2">{movie.short_description}</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      header: "Năm Phát Hành",
+      accessor: (movie: Movie) => movie.release_year
+    },
+    {
+      header: "Thời Lượng",
+      accessor: (movie: Movie) => `${movie.duration} phút`
+    },
+    {
+      header: "Thể Loại",
+      accessor: (movie: Movie) => movieTypes.find(type => type.id === movie.type)?.name || movie.type
+    },
+    {
+      header: "Lượt Xem",
+      accessor: (movie: Movie) => movie.view_count.toLocaleString()
+    },
+    {
+      header: "Trạng Thái",
+      accessor: (movie: Movie) => (
+        <Badge variant={movie.status === 1 ? "default" : "destructive"} className="font-medium">
+          {movie.status === 1 ? 'Hoạt Động' : 'Không Hoạt Động'}
+        </Badge>
+      )
+    },
+    {
+      header: "Thao Tác",
+      accessor: (movie: Movie) => (
+        <div className="flex items-center justify-end gap-2">
+          <Button variant="ghost" size="icon" asChild className="hover:bg-primary/10">
+            <Link href={`/cms/movies/${movie.id}`}>
+              <Pencil className="w-4 h-4" />
+            </Link>
+          </Button>
+          <StatusChanger 
+            id={movie.id}
+            status={Status.DELETED}
+            table="movies"
+            onSuccess={() => handleStatusChange(movie.id)}
+            icon={<Trash2 className="w-4 h-4 text-destructive" />}
+          />
+        </div>
+      ),
+      className: "text-right"
+    }
+  ];
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -170,139 +213,17 @@ export default function MoviesPage() {
           />
         </div>
 
-        {loading ? (
-          <div className="flex justify-center items-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        ) : (
-          <>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead>Tên Phim</TableHead>
-                    <TableHead>Năm Phát Hành</TableHead>
-                    <TableHead>Thời Lượng</TableHead>
-                    <TableHead>Thể Loại</TableHead>
-                    <TableHead>Lượt Xem</TableHead>
-                    <TableHead>Trạng Thái</TableHead>
-                    <TableHead className="text-right">Thao Tác</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {movies.map((movie) => (
-                    <TableRow key={movie.id} className="hover:bg-muted/50 transition-colors">
-                      <TableCell>
-                        <div className="flex gap-4">
-                          {movie.image_url ? (
-                            <Image 
-                              src={movie.image_url}
-                              alt={movie.title}
-                              width={80}
-                              height={120}
-                              className="object-cover rounded shadow-sm"
-                            />
-                          ) : (
-                            <div className="w-[80px] h-[120px] bg-muted rounded flex items-center justify-center">
-                              <span className="text-muted-foreground">No image</span>
-                            </div>
-                          )}
-                          <div>
-                            <div className="font-medium hover:text-primary cursor-pointer">{movie.title}</div>
-                            <div className="text-sm text-muted-foreground line-clamp-2">{movie.short_description}</div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{movie.release_year}</TableCell>
-                      <TableCell>{movie.duration} phút</TableCell>
-                      <TableCell>
-                        {movieTypes.find(type => type.id === movie.type)?.name || movie.type}
-                      </TableCell>
-                      <TableCell>{movie.view_count.toLocaleString()}</TableCell>
-                      <TableCell>
-                        <Badge variant={movie.status === 1 ? "default" : "destructive"} className="font-medium">
-                          {movie.status === 1 ? 'Hoạt Động' : 'Không Hoạt Động'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="icon" asChild className="hover:bg-primary/10">
-                            <Link href={`/cms/movies/${movie.id}`}>
-                              <Pencil className="w-4 h-4" />
-                            </Link>
-                          </Button>
-                          <StatusChanger 
-                            id={movie.id}
-                            status={Status.DELETED}
-                            table="movies"
-                            onSuccess={() => handleStatusChange(movie.id)}
-                            icon={<Trash2 className="w-4 h-4 text-destructive" />}
-                          />
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+        <DataTable
+          data={movies}
+          columns={columns}
+          loading={loading}
+        />
 
-            <div className="mt-4 flex items-center justify-between px-2">
-              <div className="text-sm text-muted-foreground">
-                Hiển thị {(pagination.currentPage - 1) * pagination.pageSize + 1} đến{' '}
-                {Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems)} trong tổng số{' '}
-                {pagination.totalItems} kết quả
-              </div>
-              
-              <Pagination>
-                <PaginationContent>
-                  {pagination.currentPage > 1 && (
-                    <PaginationItem>
-                      <PaginationPrevious 
-                        href="#" 
-                        onClick={() => handlePageChange(pagination.currentPage - 1)} 
-                      />
-                    </PaginationItem>
-                  )}
-
-                  {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => {
-                    if (
-                      page === 1 ||
-                      page === pagination.totalPages ||
-                      (page >= pagination.currentPage - 1 && page <= pagination.currentPage + 1)
-                    ) {
-                      return (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            href="#"
-                            onClick={() => handlePageChange(page)}
-                            isActive={page === pagination.currentPage}
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                    } else if (
-                      page === pagination.currentPage - 2 ||
-                      page === pagination.currentPage + 2
-                    ) {
-                      return <PaginationEllipsis key={page} />;
-                    }
-                    return null;
-                  })}
-
-                  {pagination.currentPage < pagination.totalPages && (
-                    <PaginationItem>
-                      <PaginationNext 
-                        href="#" 
-                        onClick={() => handlePageChange(pagination.currentPage + 1)} 
-                      />
-                    </PaginationItem>
-                  )}
-                </PaginationContent>
-              </Pagination>
-            </div>
-          </>
-        )}
+        <DataTablePagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          onPageChange={handlePageChange}
+        />
       </Card>
     </div>
   );

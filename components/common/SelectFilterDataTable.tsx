@@ -9,6 +9,7 @@ interface SelectFilterDataTableProps {
   data: { id: string; name: string; }[];
   placeholder: string;
   width: string;
+  hasAll?: boolean;
 }
 
 export const SelectFilterDataTable = ({
@@ -16,7 +17,8 @@ export const SelectFilterDataTable = ({
   onValueChange,
   data,
   placeholder,
-  width
+  width,
+  hasAll = true
 }: SelectFilterDataTableProps) => {
   return (
     <Select value={value} onValueChange={onValueChange}>
@@ -25,7 +27,7 @@ export const SelectFilterDataTable = ({
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="all">Tất cả</SelectItem>
+        {hasAll && <SelectItem value="all">Tất cả</SelectItem>}
         {data.map(item => (
           <SelectItem key={item.id} value={item.id}>
             {item.name}
