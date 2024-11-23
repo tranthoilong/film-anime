@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Image, Search, Plus, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Image, Search, Plus, MoreVertical, Pencil, Trash2, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { UploadButton } from "@uploadthing/react";
 import { StatusChanger } from "@/components/common/StatusChanger";
 import { Status } from "@/lib/types/enumStatus";
 import useSWR from "swr";
+import { Button } from "@/components/ui/button";
 
 interface ImageType {
   id: string;
@@ -126,13 +127,24 @@ export default function ImagesPage() {
                       <div className="text-white text-sm truncate flex-1">
                         {new Date(image.created_at).toLocaleDateString()}
                       </div>
-                      <StatusChanger 
-                        id={image.id}
-                        status={Status.DELETED}
-                        table="images"
-                        onSuccess={() => mutate()}
-                        icon={<Trash2 className="h-4 w-4 text-red-500" />}
-                      />
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => window.open(image.url, '_blank')}
+                          variant="ghost" 
+                          size="icon"
+                          className="hover:bg-white/20"
+                          title="View image"
+                        >
+                          <Eye className="h-4 w-4 text-white hover:text-blue-200" />
+                        </Button>
+                        <StatusChanger 
+                          id={image.id}
+                          status={Status.DELETED}
+                          table="images"
+                          onSuccess={() => mutate()}
+                          icon={<Trash2 className="h-4 w-4 text-red-500" />}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Film, Search, Plus, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { MovieStatusToggle } from './components/MovieStatusToggle';
 import { Movie } from "@/lib/types/movie";
 
 export default function MoviesPage() {
