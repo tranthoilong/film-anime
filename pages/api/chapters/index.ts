@@ -74,9 +74,9 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
 // POST /api/chapters
 async function handlePost(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { movie_id, chapter_number, title, description } = req.body;
+    const { movie_id, chapter_number, title, description, slug } = req.body;
 
-    if (!movie_id || !chapter_number) {
+    if (!movie_id || !chapter_number || !slug) {
       return res.status(StatusCode.BAD_REQUEST).json(
         createApiResponse(null, StatusCode.BAD_REQUEST, undefined, 'Missing required fields')
       );
@@ -101,12 +101,25 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       );
     }
 
+    // Check for duplicate slug
+    const existingSlug = await db('chapters')
+      .where({ movie_id, slug })
+      .first();
+
+    if (existingSlug) {
+      return res.status(StatusCode.CONFLICT).json(
+        createApiResponse(null, StatusCode.CONFLICT, undefined, 'Slug already exists for this movie')
+      );
+    }
+
     const [newChapter] = await db('chapters')
       .insert({
         movie_id,
         chapter_number,
         title,
-        description
+        description,
+        slug,
+        status: Status.ACTIVE
       })
       .returning('*');
 

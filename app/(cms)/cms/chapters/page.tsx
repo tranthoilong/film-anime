@@ -32,20 +32,13 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
-interface Movie {
+interface Chapter {
   id: string;
   title: string;
-  slug: string;
-  short_description?: string;
-  description?: string;
-  release_year: number;
-  duration: number;
-  type: string;
-  view_count: number;
-  unique_viewers: number;
-  status: number;
+  chapter_number: number;
+  movie_title: string;
   created_at: string;
-  updated_at: string;
+  status: number;
 }
 
 interface PaginationData {
@@ -55,8 +48,8 @@ interface PaginationData {
   limit: number;
 }
 
-export default function MoviesPage() {
-  const [movies, setMovies] = useState<Movie[]>([]);
+export default function ChaptersPage() {
+  const [chapters, setChapters] = useState<Chapter[]>([]);
   const [pagination, setPagination] = useState<PaginationData>({
     currentPage: 1,
     totalPages: 1,
@@ -66,36 +59,31 @@ export default function MoviesPage() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const fetchMovies = async (page = 1, searchTerm = '') => {
+  const fetchChapters = async (page = 1, searchTerm = '') => {
     try {
       setLoading(true);
       const response = await fetch(
-        `/api/movies?page=${page}&limit=${pagination.limit}&search=${searchTerm}`
+        `/api/chapters?page=${page}&limit=${pagination.limit}&search=${searchTerm}`
       );
       const data = await response.json();
       
-      if (data.status === 200) {
-        setMovies(data.data);
-        setPagination({
-          currentPage: data.pagination.page,
-          totalPages: data.pagination.totalPages,
-          totalItems: data.pagination.total,
-          limit: data.pagination.limit
-        });
+      if (data.success) {
+        setChapters(data.data.data);
+        setPagination(data.data.pagination);
       }
     } catch (error) {
-      console.error('Lỗi khi tải danh sách phim:', error);
+      console.error('Lỗi khi tải danh sách chương:', error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchMovies(1, search);
+    fetchChapters(1, search);
   }, [search]);
 
   const handlePageChange = (page: number) => {
-    fetchMovies(page, search);
+    fetchChapters(page, search);
   };
 
   const formatDate = (dateString: string) => {
@@ -109,11 +97,11 @@ export default function MoviesPage() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Danh Sách Phim</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Danh Sách Chương</h1>
         <Button asChild>
-          <Link href="/cms/movies/create">
+          <Link href="/cms/chapters/create">
             <Plus className="w-4 h-4 mr-2" />
-            Thêm Phim Mới
+            Thêm Chương Mới
           </Link>
         </Button>
       </div>
@@ -122,7 +110,7 @@ export default function MoviesPage() {
         <div className="flex gap-4 mb-6">
           <div className="flex-1">
             <Input
-              placeholder="Tìm kiếm phim..."
+              placeholder="Tìm kiếm chương..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="max-w-sm"
@@ -149,30 +137,26 @@ export default function MoviesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Tên Phim</TableHead>
-                  <TableHead>Năm Phát Hành</TableHead>
-                  <TableHead>Thời Lượng</TableHead>
-                  <TableHead>Thể Loại</TableHead>
-                  <TableHead>Lượt Xem</TableHead>
+                  <TableHead>Chương</TableHead>
+                  <TableHead>Phim</TableHead>
+                  <TableHead>Ngày Tạo</TableHead>
                   <TableHead>Trạng Thái</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {movies.map((movie) => (
-                  <TableRow key={movie.id}>
+                {chapters.map((chapter) => (
+                  <TableRow key={chapter.id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{movie.title}</div>
-                        <div className="text-sm text-muted-foreground">{movie.short_description}</div>
+                        <div className="font-medium">Chương {chapter.chapter_number}</div>
+                        <div className="text-sm text-muted-foreground">{chapter.title}</div>
                       </div>
                     </TableCell>
-                    <TableCell>{movie.release_year}</TableCell>
-                    <TableCell>{movie.duration} phút</TableCell>
-                    <TableCell>{movie.type}</TableCell>
-                    <TableCell>{movie.view_count}</TableCell>
+                    <TableCell>{chapter.movie_title}</TableCell>
+                    <TableCell>{formatDate(chapter.created_at)}</TableCell>
                     <TableCell>
-                      <Badge variant={movie.status === 1 ? "default" : "destructive"}>
-                        {movie.status === 1 ? 'Hoạt Động' : 'Không Hoạt Động'}
+                      <Badge variant={chapter.status === 1 ? "default" : "destructive"}>
+                        {chapter.status === 1 ? 'Hoạt Động' : 'Không Hoạt Động'}
                       </Badge>
                     </TableCell>
                   </TableRow>

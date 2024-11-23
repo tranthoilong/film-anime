@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Film, Tv, Users, BarChart, Image } from "lucide-react";
+import { ChevronRight, Film, Tv, Users, BarChart, Image, BookOpen, MessageSquare, Eye, Settings, FileText } from "lucide-react";
 
 export default function Sidebar() {
   const [selectedMenu, setSelectedMenu] = useState("dashboard");
@@ -27,6 +27,30 @@ export default function Sidebar() {
       id: "tv-shows"
     },
     {
+      name: "Chapters",
+      icon: <BookOpen className="w-5 h-5" />,
+      path: "/cms/chapters",
+      id: "chapters"
+    },
+    {
+      name: "Episodes",
+      icon: <FileText className="w-5 h-5" />,
+      path: "/cms/episodes",
+      id: "episodes"
+    },
+    {
+      name: "Comments",
+      icon: <MessageSquare className="w-5 h-5" />,
+      path: "/cms/comments",
+      id: "comments"
+    },
+    {
+      name: "Views",
+      icon: <Eye className="w-5 h-5" />,
+      path: "/cms/views",
+      id: "views"
+    },
+    {
       name: "Users",
       icon: <Users className="w-5 h-5" />,
       path: "/cms/users", 
@@ -37,6 +61,12 @@ export default function Sidebar() {
       icon: <Image className="w-5 h-5" />,
       path: "/cms/media",
       id: "images"
+    },
+    {
+      name: "Settings",
+      icon: <Settings className="w-5 h-5" />,
+      path: "/cms/settings",
+      id: "settings"
     }
   ];
 

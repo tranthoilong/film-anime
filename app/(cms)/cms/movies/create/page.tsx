@@ -1,8 +1,13 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Film, ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useState } from 'react';
+import Link from 'next/link';
+import { Film, ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card } from "@/components/ui/card";
 
 export default function CreateMoviePage() {
   const router = useRouter();
@@ -14,7 +19,9 @@ export default function CreateMoviePage() {
     duration: "",
     rating: "",
     thumbnail: "",
-    video_url: ""
+    video_url: "",
+    type: "",
+    status: 1
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,17 +40,17 @@ export default function CreateMoviePage() {
       if (response.ok) {
         router.push("/cms/movies");
       } else {
-        throw new Error("Failed to create movie");
+        throw new Error("Không thể tạo phim mới");
       }
     } catch (error) {
-      console.error("Error creating movie:", error);
-      alert("Failed to create movie. Please try again.");
+      console.error("Lỗi khi tạo phim:", error);
+      alert("Không thể tạo phim. Vui lòng thử lại.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -52,51 +59,50 @@ export default function CreateMoviePage() {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center mb-6">
-        <button
-          onClick={() => router.back()}
-          className="mr-4 text-gray-600 hover:text-gray-900"
-        >
-          <ArrowLeft className="w-6 h-6" />
-        </button>
-        <div className="flex items-center">
-          <Film className="w-6 h-6 text-blue-500 mr-2" />
-          <h1 className="text-2xl font-semibold">Create New Movie</h1>
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <Film className="w-5 h-5" />
+            <h1 className="text-3xl font-bold tracking-tight">Thêm Phim Mới</h1>
+          </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
-        <form onSubmit={handleSubmit}>
+      <Card className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Title</label>
-              <input
-                type="text"
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Tên Phim</label>
+              <Input
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Description</label>
-              <textarea
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Mô Tả</label>
+              <Textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
                 required
                 rows={4}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Release Year</label>
-                <input
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Năm Phát Hành</label>
+                <Input
                   type="number"
                   name="release_year"
                   value={formData.release_year}
@@ -104,80 +110,83 @@ export default function CreateMoviePage() {
                   required
                   min="1900"
                   max={new Date().getFullYear()}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Duration (minutes)</label>
-                <input
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Thời Lượng (phút)</label>
+                <Input
                   type="number"
                   name="duration"
                   value={formData.duration}
                   onChange={handleChange}
                   required
                   min="1"
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Rating</label>
-                <input
-                  type="text"
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Xếp Hạng</label>
+                <Input
                   name="rating"
                   value={formData.rating}
                   onChange={handleChange}
                   required
-                  placeholder="e.g. PG-13"
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="VD: PG-13"
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Thumbnail URL</label>
-              <input
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Thể Loại</label>
+              <Input
+                name="type"
+                value={formData.type}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">URL Ảnh Thumbnail</label>
+              <Input
                 type="url"
                 name="thumbnail"
                 value={formData.thumbnail}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Video URL</label>
-              <input
+            <div className="space-y-2">
+              <label className="text-sm font-medium">URL Video</label>
+              <Input
                 type="url"
                 name="video_url"
                 value={formData.video_url}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
           </div>
 
-          <div className="mt-6 flex justify-end">
-            <button
+          <div className="flex justify-end gap-4">
+            <Button
               type="button"
+              variant="outline"
               onClick={() => router.back()}
-              className="mr-3 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Cancel
-            </button>
-            <button
+              Hủy
+            </Button>
+            <Button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              {isSubmitting ? "Creating..." : "Create Movie"}
-            </button>
+              {isSubmitting ? "Đang tạo..." : "Tạo Phim"}
+            </Button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }

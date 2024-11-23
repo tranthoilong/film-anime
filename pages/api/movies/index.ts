@@ -28,7 +28,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         );
 
       case 'POST':
-        const { title, short_description, description, release_year, duration, type, image_id } = req.body;
+        const { 
+          title,
+          slug,
+          short_description,
+          description,
+          release_year,
+          duration,
+          type,
+          image_id,
+          status = 1
+        } = req.body;
 
         // Start a transaction
         const trx = await db.transaction();
@@ -38,12 +48,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           const [newMovie] = await trx('movies')
             .insert({
               title,
+              slug,
               short_description,
               description,
               release_year,
               duration,
               type,
               image_id,
+              status,
               view_count: 0,
               unique_viewers: 0
             })
