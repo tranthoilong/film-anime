@@ -41,6 +41,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { movieTypes } from '@/lib/configs/config.json';
+import { SelectFilterDataTable } from '@/components/common/SelectFilterDataTable';
 
 interface Movie {
   id: string;
@@ -137,41 +138,36 @@ export default function MoviesPage() {
             />
           </div>
           
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
-              <Filter className="w-4 h-4 mr-2" />
-              <SelectValue placeholder="Trạng thái" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tất cả</SelectItem>
-              <SelectItem value="1">Hoạt động</SelectItem>
-              <SelectItem value="0">Không hoạt động</SelectItem>
-            </SelectContent>
-          </Select>
+          <SelectFilterDataTable
+            value={statusFilter}
+            onValueChange={setStatusFilter}
+            data={[
+              { id: "1", name: "Hoạt động" },
+              { id: "0", name: "Không hoạt động" }
+            ]}
+            placeholder="Trạng thái"
+            width="180px"
+          />
 
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[180px]">
-              <Filter className="w-4 h-4 mr-2" />
-              <SelectValue placeholder="Thể loại" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tất cả</SelectItem>
-              {movieTypes.map(type => (
-                <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SelectFilterDataTable
+            value={typeFilter}
+            onValueChange={setTypeFilter}
+            data={movieTypes}
+            placeholder="Thể loại"
+            width="180px"
+          />
 
-          <Select defaultValue="10" onValueChange={(value) => setPagination(prev => ({...prev, pageSize: Number(value)}))}>
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Số mục" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10 mục</SelectItem>
-              <SelectItem value="20">20 mục</SelectItem>
-              <SelectItem value="50">50 mục</SelectItem>
-            </SelectContent>
-          </Select>
+          <SelectFilterDataTable
+            value="10"
+            onValueChange={(value) => setPagination(prev => ({...prev, pageSize: Number(value)}))}
+            data={[
+              { id: "10", name: "10 mục" },
+              { id: "20", name: "20 mục" }, 
+              { id: "50", name: "50 mục" }
+            ]}
+            placeholder="Số mục"
+            width="120px"
+          />
         </div>
 
         {loading ? (
