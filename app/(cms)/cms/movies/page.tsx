@@ -3,46 +3,43 @@
 import { useState, useEffect } from "react";
 import { Film, Search, Plus, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { MovieStatusToggle } from './components/MovieStatusToggle';
+import { Movie } from "@/lib/types/movie";
 
 export default function MoviesPage() {
   const router = useRouter();
-  const [movies, setMovies] = useState([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchMovies();
-  }, [page]);
+  }, []);
 
   const fetchMovies = async () => {
     try {
-      setIsLoading(true);
-      const response = await fetch(`/api/movies?page=${page}&limit=10`);
+      const response = await fetch('/api/movies');
       const result = await response.json();
-      
       setMovies(result.data);
-      setTotalPages(result.pagination.totalPages);
     } catch (error) {
-      console.error("Error fetching movies:", error);
+      console.error('Error fetching movies:', error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this movie?")) {
       try {
         const response = await fetch(`/api/movies/${id}`, {
-          method: "DELETE",
+          method: 'DELETE',
         });
 
         if (response.ok) {
           fetchMovies();
         }
       } catch (error) {
-        console.error("Error deleting movie:", error);
+        console.error('Error deleting movie:', error);
       }
     }
   };
@@ -71,8 +68,8 @@ export default function MoviesPage() {
               <input
                 type="text"
                 placeholder="Search movies..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -91,7 +88,7 @@ export default function MoviesPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {isLoading ? (
+              {loading ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-4 text-center">Loading...</td>
                 </tr>
