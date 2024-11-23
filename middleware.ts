@@ -6,6 +6,24 @@ export async function middleware(request: NextRequest) {
   const cookieStore = request.cookies;
   const token = cookieStore.get('_sess_auth')?.value;
 
+  // Check auth routes for logged in users
+  if (request.nextUrl.pathname === '/auth/login' || request.nextUrl.pathname === '/auth/register') {
+    if (token) {
+      try {
+        await jwtVerify(
+          token,
+          new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key')
+        );
+        // If token is valid, redirect to home page
+        return NextResponse.redirect(new URL('/', request.url));
+      } catch (error) {
+        // If token is invalid, allow access to auth pages
+        return NextResponse.next();
+      }
+    }
+    return NextResponse.next();
+  }
+
   // Check CMS routes
   if (request.nextUrl.pathname.startsWith('/cms')) {
     try {
@@ -79,5 +97,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/cms/:path*', '/api/:path*']
+  matcher: ['/cms/:path*', '/api/:path*', '/auth/login', '/auth/register']
 };

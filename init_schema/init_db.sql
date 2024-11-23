@@ -41,6 +41,20 @@ CREATE TABLE Users (
     FOREIGN KEY (role_id) REFERENCES Roles (id)
 );
 
+-- Insert default admin user with hashed password 'admin123'
+INSERT INTO Users (id, role_id, username, email, password, full_name, status) 
+VALUES (
+    'b6915b1e-84ac-463b-8f41-f8358dda04aa',
+    'a1b2c3d4-e5f6-4708-b910-1234567890ab', -- admin role id
+    'admin',
+    'admin@example.com',
+    '$2b$10$nC2VIOM053iXB0WL4zbGIuwpELprnT2TddU2lcJtOZmrEEIWFnHZm', -- Replace with actual hashed password
+    'System Administrator',
+    1
+);
+
+
+
 
 CREATE TABLE Images
 (
@@ -56,6 +70,7 @@ CREATE TABLE Movies
 (
     id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title             VARCHAR(255) NOT NULL,      -- Tiêu đề phim
+    slug              VARCHAR(255) NOT NULL UNIQUE, -- URL friendly slug
     short_description VARCHAR(255),               -- Mô tả ngắn
     description       TEXT,                       -- Mô tả dài
     release_year      INT,                        -- Năm phát hành
@@ -76,12 +91,14 @@ CREATE TABLE Chapters
     movie_id       UUID NOT NULL,     -- Mã phim
     chapter_number INT  NOT NULL,     -- Số chương
     title          VARCHAR(255),      -- Tiêu đề chương
+    slug           VARCHAR(255) NOT NULL, -- URL friendly slug
     description    TEXT,              -- Mô tả chương
     status         INT      DEFAULT 1, -- Trạng thái (1: active, 0: inactive)
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (movie_id) REFERENCES Movies (id),
-    UNIQUE (movie_id, chapter_number) -- Đảm bảo số chương không trùng lặp trong phim
+    UNIQUE (movie_id, chapter_number), -- Đảm bảo số chương không trùng lặp trong phim
+    UNIQUE (movie_id, slug) -- Đảm bảo slug không trùng lặp trong phim
 );
 
 CREATE TABLE Episodes
@@ -91,6 +108,7 @@ CREATE TABLE Episodes
     chapter_id        UUID,                       -- Mã chương (nếu có)
     episode_number    INT  NOT NULL,              -- Số tập
     title             VARCHAR(255),               -- Tiêu đề tập
+    slug              VARCHAR(255) NOT NULL,      -- URL friendly slug
     short_description VARCHAR(255),               -- Mô tả ngắn của tập
     description       TEXT,                       -- Mô tả dài của tập
     duration          INT,                        -- Thời lượng tập (phút)
@@ -103,7 +121,8 @@ CREATE TABLE Episodes
     FOREIGN KEY (movie_id) REFERENCES Movies (id),
     FOREIGN KEY (chapter_id) REFERENCES Chapters (id),
     FOREIGN KEY (image_id) REFERENCES Images (id),
-    UNIQUE (movie_id, chapter_id, episode_number) -- Đảm bảo số tập không trùng lặp trong chương/phim
+    UNIQUE (movie_id, chapter_id, episode_number), -- Đảm bảo số tập không trùng lặp trong chương/phim
+    UNIQUE (movie_id, chapter_id, slug) -- Đảm bảo slug không trùng lặp trong chương/phim
 );
 
 CREATE TABLE VideoLinks
