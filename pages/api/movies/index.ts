@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const limit = Number(req.query.limit) || 10;
         const offset = (page - 1) * limit;
         const search = req.query.search as string || '';
-        
+        const type_filter = req.query.type as string || 'all';
 
         // Build query
         let query = db('movies')
@@ -24,6 +24,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               .orWhere('movies.short_description', 'ilike', `%${search}%`)
               .orWhere('movies.description', 'ilike', `%${search}%`);
           });
+        }
+
+        // Add type filter if specified
+        if (type_filter !== 'all') {
+          query = query.where('movies.type', type_filter);
         }
 
         // Get total count

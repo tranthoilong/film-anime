@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Filter } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -34,6 +34,13 @@ import {
 import Image from "next/image";
 import { Status } from "@/lib/types/enumStatus";
 import { StatusChanger } from "@/components/common/StatusChanger";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { movieTypes } from '@/lib/configs/config.json';
 
 interface Movie {
   id: string;
@@ -69,13 +76,17 @@ export default function MoviesPage() {
     pageSize: 10
   });
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
 
-  const fetchMovies = async (page = 1, searchTerm = '') => {
+  const fetchMovies = async (page = 1, searchTerm = '', status = 'all', type = 'all') => {
     try {
       setLoading(true);
+      const statusQuery = status !== 'all' ? `&status=${status}` : '';
+      const typeQuery = type !== 'all' ? `&type=${type}` : '';
       const response = await fetch(
-        `/api/movies?page=${page}&limit=${pagination.pageSize}&search=${searchTerm}`
+        `/api/movies?page=${page}&limit=${pagination.pageSize}&search=${searchTerm}${statusQuery}${typeQuery}`
       );
       const data = await response.json();
       
@@ -91,15 +102,15 @@ export default function MoviesPage() {
   };
 
   useEffect(() => {
-    fetchMovies(1, search);
-  }, [search]);
+    fetchMovies(1, search, statusFilter, typeFilter);
+  }, [search, statusFilter, typeFilter]);
 
   const handlePageChange = (page: number) => {
-    fetchMovies(page, search);
+    fetchMovies(page, search, statusFilter, typeFilter);
   };
 
   const handleStatusChange = async (movieId: string) => {
-    await fetchMovies(pagination.currentPage, search);
+    await fetchMovies(pagination.currentPage, search, statusFilter, typeFilter);
   };
 
   return (
@@ -107,7 +118,7 @@ export default function MoviesPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Danh Sách Phim</h1>
         <Button asChild>
-          <Link href="/cms/movies/create">
+          <Link href="/cms/movies/create" className="hover:bg-primary/90 transition-colors">
             <Plus className="w-4 h-4 mr-2" />
             Thêm Phim Mới
           </Link>
@@ -116,17 +127,44 @@ export default function MoviesPage() {
 
       <Card className="p-4">
         <div className="flex gap-4 mb-6">
-          <div className="flex-1">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" />
             <Input
               placeholder="Tìm kiếm phim..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="max-w-sm"
+              className="pl-10 max-w-sm"
             />
           </div>
-          <Select defaultValue="10">
-            <SelectTrigger className="w-[100px]">
-              <SelectValue placeholder="10 mục" />
+          
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <Filter className="w-4 h-4 mr-2" />
+              <SelectValue placeholder="Trạng thái" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả</SelectItem>
+              <SelectItem value="1">Hoạt động</SelectItem>
+              <SelectItem value="0">Không hoạt động</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-[180px]">
+              <Filter className="w-4 h-4 mr-2" />
+              <SelectValue placeholder="Thể loại" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả</SelectItem>
+              {movieTypes.map(type => (
+                <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select defaultValue="10" onValueChange={(value) => setPagination(prev => ({...prev, pageSize: Number(value)}))}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder="Số mục" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="10">10 mục</SelectItem>
@@ -138,71 +176,79 @@ export default function MoviesPage() {
 
         {loading ? (
           <div className="flex justify-center items-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : (
           <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tên Phim</TableHead>
-                  <TableHead>Năm Phát Hành</TableHead>
-                  <TableHead>Thời Lượng</TableHead>
-                  <TableHead>Thể Loại</TableHead>
-                  <TableHead>Lượt Xem</TableHead>
-                  <TableHead>Trạng Thái</TableHead>
-                  <TableHead>Thao Tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {movies.map((movie) => (
-                  <TableRow key={movie.id}>
-                    <TableCell>
-                      <div className="flex gap-4">
-                        {movie.image_url && (
-                          <Image 
-                            src={movie.image_url}
-                            alt={movie.title}
-                            width={80}
-                            height={120}
-                            className="object-cover rounded"
-                          />
-                        )}
-                        <div>
-                          <div className="font-medium">{movie.title}</div>
-                          <div className="text-sm text-muted-foreground">{movie.short_description}</div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{movie.release_year}</TableCell>
-                    <TableCell>{movie.duration} phút</TableCell>
-                    <TableCell>{movie.type}</TableCell>
-                    <TableCell>{movie.view_count}</TableCell>
-                    <TableCell>
-                      <Badge variant={movie.status === 1 ? "default" : "destructive"}>
-                        {movie.status === 1 ? 'Hoạt Động' : 'Không Hoạt Động'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" asChild>
-                          <Link href={`/cms/movies/${movie.id}`}>
-                            <Pencil className="w-4 h-4" />
-                          </Link>
-                        </Button>
-                        <StatusChanger 
-                          id={movie.id}
-                          status={Status.DELETED}
-                          table="movies"
-                          onSuccess={() => handleStatusChange(movie.id)}
-                          icon={<Trash2 className="w-4 h-4 text-red-500" />}
-                        />
-                      </div>
-                    </TableCell>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead>Tên Phim</TableHead>
+                    <TableHead>Năm Phát Hành</TableHead>
+                    <TableHead>Thời Lượng</TableHead>
+                    <TableHead>Thể Loại</TableHead>
+                    <TableHead>Lượt Xem</TableHead>
+                    <TableHead>Trạng Thái</TableHead>
+                    <TableHead className="text-right">Thao Tác</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {movies.map((movie) => (
+                    <TableRow key={movie.id} className="hover:bg-muted/50 transition-colors">
+                      <TableCell>
+                        <div className="flex gap-4">
+                          {movie.image_url ? (
+                            <Image 
+                              src={movie.image_url}
+                              alt={movie.title}
+                              width={80}
+                              height={120}
+                              className="object-cover rounded shadow-sm"
+                            />
+                          ) : (
+                            <div className="w-[80px] h-[120px] bg-muted rounded flex items-center justify-center">
+                              <span className="text-muted-foreground">No image</span>
+                            </div>
+                          )}
+                          <div>
+                            <div className="font-medium hover:text-primary cursor-pointer">{movie.title}</div>
+                            <div className="text-sm text-muted-foreground line-clamp-2">{movie.short_description}</div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{movie.release_year}</TableCell>
+                      <TableCell>{movie.duration} phút</TableCell>
+                      <TableCell>
+                        {movieTypes.find(type => type.id === movie.type)?.name || movie.type}
+                      </TableCell>
+                      <TableCell>{movie.view_count.toLocaleString()}</TableCell>
+                      <TableCell>
+                        <Badge variant={movie.status === 1 ? "default" : "destructive"} className="font-medium">
+                          {movie.status === 1 ? 'Hoạt Động' : 'Không Hoạt Động'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button variant="ghost" size="icon" asChild className="hover:bg-primary/10">
+                            <Link href={`/cms/movies/${movie.id}`}>
+                              <Pencil className="w-4 h-4" />
+                            </Link>
+                          </Button>
+                          <StatusChanger 
+                            id={movie.id}
+                            status={Status.DELETED}
+                            table="movies"
+                            onSuccess={() => handleStatusChange(movie.id)}
+                            icon={<Trash2 className="w-4 h-4 text-destructive" />}
+                          />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
 
             <div className="mt-4 flex items-center justify-between px-2">
               <div className="text-sm text-muted-foreground">
