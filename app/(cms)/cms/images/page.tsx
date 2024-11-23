@@ -30,7 +30,7 @@ export default function ImagesPage() {
   }>(`/api/images?page=${page}&limit=12${searchQuery ? `&search=${searchQuery}` : ''}`, fetcher);
 
   const images = data?.data || [];
-  const totalPages = data?.pagination.totalPages || 1;
+  const totalPages = data?.pagination?.totalPages || 1;
 
   const createImage = async (imageData: { url: string; name: string }) => {
     try {

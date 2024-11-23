@@ -1,12 +1,12 @@
-DROP TABLE IF EXISTS VideoLinks;
-DROP TABLE IF EXISTS Episodes;
-DROP TABLE IF EXISTS Chapters;
-DROP TABLE IF EXISTS Movies;
-DROP TABLE IF EXISTS Images;
-DROP TABLE IF EXISTS Comments;
-DROP TABLE IF EXISTS Views;
-DROP TABLE IF EXISTS Users;
-DROP TABLE IF EXISTS Roles;
+DROP TABLE IF EXISTS VideoLinks CASCADE;
+DROP TABLE IF EXISTS Episodes CASCADE;
+DROP TABLE IF EXISTS Chapters CASCADE;
+DROP TABLE IF EXISTS Movies CASCADE;
+DROP TABLE IF EXISTS Images CASCADE;
+DROP TABLE IF EXISTS Comments CASCADE;
+DROP TABLE IF EXISTS Views CASCADE;
+DROP TABLE IF EXISTS Users CASCADE;
+DROP TABLE IF EXISTS Roles CASCADE;
 
 CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
 
@@ -20,9 +20,17 @@ CREATE TABLE Roles (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+INSERT INTO Roles (id, name, description, status, created_at, updated_at) VALUES
+                                                                              ('a1b2c3d4-e5f6-4708-b910-1234567890ab', 'admin', 'Full system access and management privileges including user management, role assignment, content approval, and system configuration', 1, CURRENT_TIMESTAMP - INTERVAL '1 year', CURRENT_TIMESTAMP),
+                                                                              ('b2c3d4e5-f6a7-5809-b910-1234567890ab', 'moderator', 'Content moderation privileges including reviewing and approving user submissions, managing comments, and handling reported content', 1, CURRENT_TIMESTAMP - INTERVAL '6 months', CURRENT_TIMESTAMP),
+                                                                              ('c3d4e5f6-a7b8-6910-b910-1234567890ab', 'editor', 'Content management privileges including creating, editing and organizing movies, chapters and episodes. Can upload media but cannot modify system settings', 1, CURRENT_TIMESTAMP - INTERVAL '3 months', CURRENT_TIMESTAMP),
+                                                                              ('d4e5f6a7-b8c9-7011-b910-1234567890ab', 'user', 'Basic access privileges including viewing content, adding comments, and maintaining a personal profile', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+                                                                              ('e5f6a7b8-c9d0-8112-b910-1234567890ab', 'premium_user', 'Enhanced access privileges including ad-free viewing, early access to content, and exclusive features', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+                                                                              ('f6a7b8c9-d0e1-9213-b910-1234567890ab', 'guest', 'Limited access privileges for non-registered users. Can only view public content', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
 CREATE TABLE Users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    role_id UUID NOT NULL,
+    role_id UUID DEFAULT 'd4e5f6a7-b8c9-7011-b910-1234567890ab',
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
@@ -32,6 +40,7 @@ CREATE TABLE Users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (role_id) REFERENCES Roles (id)
 );
+
 
 CREATE TABLE Images
 (

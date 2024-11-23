@@ -2,11 +2,24 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import db from '../../../lib/db';
 import { createApiResponse, createPagination } from '../../../lib/helpers/apiResponse';
 import { Status } from '../../../lib/types/enumStatus';
+import { useAuth } from '../../../hooks/useAuth';
+import { log } from 'console';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+
   try {
+
+    const verified = await useAuth(req, res);
+    if (!verified || verified.payload.roleName !== 'admin') {
+        return res.status(401).json(
+            createApiResponse(null, 401, undefined, 'Unauthorized')
+        );
+    }
+
+
     switch (req.method) {
       case 'GET':
+
       // Lấy tham số page, limit, và search từ query params
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
