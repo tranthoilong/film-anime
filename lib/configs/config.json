@@ -1,0 +1,44 @@
+{
+  "movieTypes": [
+    {
+      "id": "action",
+      "name": "Hành động"
+    },
+    {
+      "id": "comedy", 
+      "name": "Hài hước"
+    },
+    {
+      "id": "drama",
+      "name": "Chính kịch"
+    },
+    {
+      "id": "horror",
+      "name": "Kinh dị"
+    },
+    {
+      "id": "romance",
+      "name": "Lãng mạn"
+    },
+    {
+      "id": "scifi",
+      "name": "Khoa học viễn tưởng"
+    },
+    {
+      "id": "thriller",
+      "name": "Giật gân"
+    },
+    {
+      "id": "animation",
+      "name": "Hoạt hình"
+    },
+    {
+      "id": "documentary",
+      "name": "Tài liệu"
+    },
+    {
+      "id": "adventure",
+      "name": "Phiêu lưu"
+    }
+  ]
+}

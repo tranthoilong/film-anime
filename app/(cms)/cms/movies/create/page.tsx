@@ -8,6 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import movieTypes from '@/lib/configs/config.json';
 
 export default function CreateMoviePage() {
   const router = useRouter();
@@ -58,6 +66,19 @@ export default function CreateMoviePage() {
     }));
   };
 
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Generate years from 1900 to current year
+  const years = Array.from({ length: new Date().getFullYear() - 1900 + 1 }, (_, i) => 1900 + i).reverse();
+  
+  // Generate durations from 1 to 300 minutes
+  const durations = Array.from({ length: 300 }, (_, i) => i + 1);
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -102,27 +123,42 @@ export default function CreateMoviePage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Năm Phát Hành</label>
-                <Input
-                  type="number"
+                <Select
                   name="release_year"
                   value={formData.release_year}
-                  onChange={handleChange}
-                  required
-                  min="1900"
-                  max={new Date().getFullYear()}
-                />
+                  onValueChange={(value) => handleSelectChange("release_year", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn năm" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {years.map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Thời Lượng (phút)</label>
-                <Input
-                  type="number"
+                <Select
                   name="duration"
                   value={formData.duration}
-                  onChange={handleChange}
-                  required
-                  min="1"
-                />
+                  onValueChange={(value) => handleSelectChange("duration", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn số phút" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {durations.map((duration) => (
+                      <SelectItem key={duration} value={duration.toString()}>
+                        {duration} phút
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -139,12 +175,22 @@ export default function CreateMoviePage() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Thể Loại</label>
-              <Input
+              <Select
                 name="type"
                 value={formData.type}
-                onChange={handleChange}
-                required
-              />
+                onValueChange={(value) => handleSelectChange("type", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn thể loại" />
+                </SelectTrigger>
+                <SelectContent>
+                  {movieTypes.movieTypes.map((type) => (
+                    <SelectItem key={type.id} value={type.id}>
+                      {type.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
