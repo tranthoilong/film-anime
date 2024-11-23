@@ -26,23 +26,42 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
 
     let query = db('chapters')
       .select(
-        'chapters.*',
+        'chapters.id',
+        'chapters.movie_id',
+        'chapters.chapter_number',
+        'chapters.title',
+        'chapters.slug',
+        'chapters.description', 
+        'chapters.status',
+        'chapters.created_at',
+        'chapters.updated_at',
         'movies.title as movie_title'
       )
       .leftJoin('movies', 'chapters.movie_id', 'movies.id')
-      .where('chapters.status', '!=', Status.DELETED) 
-      .orderBy('chapters.created_at', 'desc');
+      .where('chapters.status', '!=', Status.DELETED)
+      .orderBy([
+        { column: 'chapters.movie_id', order: 'asc' },
+        { column: 'chapters.chapter_number', order: 'asc' }
+      ]);
 
     if (movie_id) {
       query = query.where('chapters.movie_id', movie_id as string);
     }
 
     if (search) {
-      query = query.where('chapters.title', 'ilike', `%${search}%`);
+      query = query.where((builder) => {
+        builder
+          .where('chapters.title', 'ilike', `%${search}%`)
+          .orWhere('chapters.chapter_number', 'ilike', `%${search}%`)
+          .orWhere('movies.title', 'ilike', `%${search}%`);
+      });
     }
 
     const [totalItems, items] = await Promise.all([
-      db('chapters').count('* as count').first(),
+      db('chapters')
+        .where('status', '!=', Status.DELETED)
+        .count('* as count')
+        .first(),
       query.limit(Number(limit)).offset(offset)
     ]);
 

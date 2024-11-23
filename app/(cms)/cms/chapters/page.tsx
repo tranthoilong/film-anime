@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -34,11 +34,15 @@ import {
 
 interface Chapter {
   id: string;
-  title: string;
+  movie_id: string;
   chapter_number: number;
-  movie_title: string;
-  created_at: string;
+  title: string;
+  slug: string;
+  description: string;
   status: number;
+  created_at: string;
+  updated_at: string;
+  movie_title: string;
 }
 
 interface PaginationData {
@@ -46,6 +50,14 @@ interface PaginationData {
   totalPages: number;
   totalItems: number;
   limit: number;
+}
+
+interface ApiResponse {
+  statusCode: number;
+  data: {
+    data: Chapter[];
+    pagination: PaginationData;
+  };
 }
 
 export default function ChaptersPage() {
@@ -65,9 +77,9 @@ export default function ChaptersPage() {
       const response = await fetch(
         `/api/chapters?page=${page}&limit=${pagination.limit}&search=${searchTerm}`
       );
-      const data = await response.json();
+      const data: ApiResponse = await response.json();
       
-      if (data.success) {
+      if (data.statusCode === 200) {
         setChapters(data.data.data);
         setPagination(data.data.pagination);
       }

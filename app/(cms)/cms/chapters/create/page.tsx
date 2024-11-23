@@ -15,13 +15,14 @@ import {
 import { Loader2 } from "lucide-react";
 import { z } from "zod";
 import slugify from 'slugify';
+import { SelectData } from '@/components/common/SelectData';
 
 const chapterSchema = z.object({
   title: z.string().min(1, "Tiêu đề không được để trống"),
   slug: z.string().min(1, "Slug không được để trống"),
   chapter_number: z.string().min(1, "Số chương không được để trống"),
   movie_id: z.string().min(1, "ID phim không được để trống"), 
-  content: z.string().min(1, "Nội dung không được để trống"),
+  description: z.string().min(1, "Nội dung không được để trống"),
   status: z.string()
 });
 
@@ -34,7 +35,7 @@ export default function CreateChapterPage() {
     slug: '',
     chapter_number: '',
     movie_id: '',
-    content: '',
+    description: '',
     status: '1'
   });
 
@@ -56,10 +57,13 @@ export default function CreateChapterPage() {
 
       const data = await response.json();
 
-      if (data.success) {
+      if (response.ok) {
         router.push('/cms/chapters');
       } else {
-        console.error('Error creating chapter:', data.message);
+        setErrors(prev => ({
+          ...prev,
+          chapter_number: data.message || 'Có lỗi xảy ra khi tạo chương mới'
+        }));
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -157,12 +161,10 @@ export default function CreateChapterPage() {
 
           <div>
             <label className="block text-sm font-medium mb-1">ID Phim</label>
-            <Input
-              name="movie_id"
-              value={formData.movie_id}
-              onChange={handleChange}
-              placeholder="Nhập ID phim"
-              required
+            <SelectData
+              endpoint="/api/movies/get-data-select"
+              onSelect={(value: string) => setFormData(prev => ({ ...prev, movie_id: value }))}
+              placeholder="Chọn phim"
             />
             {errors.movie_id && (
               <p className="text-sm text-red-500 mt-1">{errors.movie_id}</p>
@@ -172,15 +174,15 @@ export default function CreateChapterPage() {
           <div>
             <label className="block text-sm font-medium mb-1">Nội dung</label>
             <textarea
-              name="content"
-              value={formData.content}
+              name="description"
+              value={formData.description}
               onChange={handleChange}
               placeholder="Nhập nội dung chương"
               className="w-full min-h-[200px] p-2 border rounded-md"
               required
             />
-            {errors.content && (
-              <p className="text-sm text-red-500 mt-1">{errors.content}</p>
+            {errors.description && (
+              <p className="text-sm text-red-500 mt-1">{errors.description}</p>
             )}
           </div>
 
