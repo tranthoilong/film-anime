@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Film, ArrowLeft } from 'lucide-react';
+import { Film, ArrowLeft, ImageIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,20 +18,25 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import movieTypes from '@/lib/configs/config.json';
 import slugify from 'slugify';
+import { DialogMedia } from '@/components/common/DialogMedia';
+import Image from 'next/image';
 
 export default function CreateMoviePage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMediaDialogOpen, setIsMediaDialogOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<{id: string, url: string} | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
     short_description: "",
-    description: "",
+    description: "", 
     release_year: "",
     duration: "",
     type: "",
-    status: 1
+    status: 1,
+    image_id: ""
   });
 
   useEffect(() => {
@@ -95,6 +100,17 @@ export default function CreateMoviePage() {
     }));
   };
 
+  const handleImageSelect = (images: {id: string, url: string}[]) => {
+    if (images.length > 0) {
+      const image = images[0];
+      setSelectedImage(image);
+      setFormData(prev => ({
+        ...prev,
+        image_id: image.id
+      }));
+    }
+  };
+
   // Generate years from 1900 to current year
   const years = Array.from({ length: new Date().getFullYear() - 1900 + 1 }, (_, i) => 1900 + i).reverse();
   
@@ -121,6 +137,33 @@ export default function CreateMoviePage() {
       <Card className="p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Ảnh Thumbnail</label>
+              <div className="flex items-center gap-4">
+                {selectedImage ? (
+                  <div className="relative w-40 h-40 rounded-lg overflow-hidden">
+                    <Image
+                      src={selectedImage.url}
+                      alt="Thumbnail"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center w-40 h-40 bg-gray-100 rounded-lg">
+                    <ImageIcon className="w-8 h-8 text-gray-400" />
+                  </div>
+                )}
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsMediaDialogOpen(true)}
+                >
+                  Chọn ảnh
+                </Button>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium">Tên Phim</label>
               <Input
@@ -244,6 +287,13 @@ export default function CreateMoviePage() {
           </div>
         </form>
       </Card>
+
+      <DialogMedia
+        isOpen={isMediaDialogOpen}
+        onClose={() => setIsMediaDialogOpen(false)}
+        onSelect={handleImageSelect}
+        multiple={false}
+      />
     </div>
   );
 }

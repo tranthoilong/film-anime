@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -31,6 +31,9 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import Image from "next/image";
+import { Status } from "@/lib/types/enumStatus";
+import { StatusChanger } from "@/components/common/StatusChanger";
 
 interface Movie {
   id: string;
@@ -46,13 +49,15 @@ interface Movie {
   status: number;
   created_at: string;
   updated_at: string;
+  image_url: string | null;
+  image_name: string | null;
 }
 
 interface PaginationData {
   currentPage: number;
   totalPages: number;
   totalItems: number;
-  limit: number;
+  pageSize: number;
 }
 
 export default function MoviesPage() {
@@ -61,7 +66,7 @@ export default function MoviesPage() {
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
-    limit: 10
+    pageSize: 10
   });
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -70,18 +75,13 @@ export default function MoviesPage() {
     try {
       setLoading(true);
       const response = await fetch(
-        `/api/movies?page=${page}&limit=${pagination.limit}&search=${searchTerm}`
+        `/api/movies?page=${page}&limit=${pagination.pageSize}&search=${searchTerm}`
       );
       const data = await response.json();
       
-      if (data.status === 200) {
+      if (data.statusCode === 200) {
         setMovies(data.data);
-        setPagination({
-          currentPage: data.pagination.page,
-          totalPages: data.pagination.totalPages,
-          totalItems: data.pagination.total,
-          limit: data.pagination.limit
-        });
+        setPagination(data.pagination);
       }
     } catch (error) {
       console.error('Lỗi khi tải danh sách phim:', error);
@@ -98,12 +98,8 @@ export default function MoviesPage() {
     fetchMovies(page, search);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+  const handleStatusChange = async (movieId: string) => {
+    await fetchMovies(pagination.currentPage, search);
   };
 
   return (
@@ -155,15 +151,27 @@ export default function MoviesPage() {
                   <TableHead>Thể Loại</TableHead>
                   <TableHead>Lượt Xem</TableHead>
                   <TableHead>Trạng Thái</TableHead>
+                  <TableHead>Thao Tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {movies.map((movie) => (
                   <TableRow key={movie.id}>
                     <TableCell>
-                      <div>
-                        <div className="font-medium">{movie.title}</div>
-                        <div className="text-sm text-muted-foreground">{movie.short_description}</div>
+                      <div className="flex gap-4">
+                        {movie.image_url && (
+                          <Image 
+                            src={movie.image_url}
+                            alt={movie.title}
+                            width={80}
+                            height={120}
+                            className="object-cover rounded"
+                          />
+                        )}
+                        <div>
+                          <div className="font-medium">{movie.title}</div>
+                          <div className="text-sm text-muted-foreground">{movie.short_description}</div>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>{movie.release_year}</TableCell>
@@ -175,6 +183,22 @@ export default function MoviesPage() {
                         {movie.status === 1 ? 'Hoạt Động' : 'Không Hoạt Động'}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" asChild>
+                          <Link href={`/cms/movies/${movie.id}`}>
+                            <Pencil className="w-4 h-4" />
+                          </Link>
+                        </Button>
+                        <StatusChanger 
+                          id={movie.id}
+                          status={Status.DELETED}
+                          table="movies"
+                          onSuccess={() => handleStatusChange(movie.id)}
+                          icon={<Trash2 className="w-4 h-4 text-red-500" />}
+                        />
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -182,8 +206,8 @@ export default function MoviesPage() {
 
             <div className="mt-4 flex items-center justify-between px-2">
               <div className="text-sm text-muted-foreground">
-                Hiển thị {(pagination.currentPage - 1) * pagination.limit + 1} đến{' '}
-                {Math.min(pagination.currentPage * pagination.limit, pagination.totalItems)} trong tổng số{' '}
+                Hiển thị {(pagination.currentPage - 1) * pagination.pageSize + 1} đến{' '}
+                {Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems)} trong tổng số{' '}
                 {pagination.totalItems} kết quả
               </div>
               

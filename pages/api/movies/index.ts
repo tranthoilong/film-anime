@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import db from '../../../lib/db';
 import { createApiResponse, createPagination } from '../../../lib/helpers/apiResponse';
+import { Status } from '@/lib/types/enumStatus';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -9,15 +10,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 10;
         const offset = (page - 1) * limit;
+        const search = req.query.search as string || '';
+        
+
+        // Build query
+        let query = db('movies')
+          .where('movies.status','!=', Status.DELETED);
+
+        // Add search condition if search term exists
+        if (search) {
+          query = query.where((builder) => {
+            builder.where('movies.title', 'ilike', `%${search}%`)
+              .orWhere('movies.short_description', 'ilike', `%${search}%`)
+              .orWhere('movies.description', 'ilike', `%${search}%`);
+          });
+        }
 
         // Get total count
-        const [{ count }] = await db('movies').count('id as count');
+        const [{ count }] = await query.clone().count('id as count');
         const totalItems = Number(count);
 
-        // Get paginated data
-        const movies = await db('movies')
-          .select('*')
-          .orderBy('created_at', 'desc')
+        // Get paginated data with image details
+        const movies = await query
+          .select(
+            'movies.*',
+            'images.url as image_url',
+            'images.name as image_name'
+          )
+          .leftJoin('images', 'movies.image_id', 'images.id')
+          .orderBy('movies.created_at', 'desc')
           .offset(offset)
           .limit(limit);
 
