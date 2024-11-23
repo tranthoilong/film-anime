@@ -40,39 +40,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           status = 1
         } = req.body;
 
-        // Start a transaction
-        const trx = await db.transaction();
+        // Insert movie
+        const [newMovie] = await db('movies')
+          .insert({
+            title,
+            slug,
+            short_description,
+            description,
+            release_year,
+            duration,
+            type,
+            image_id,
+            status,
+            view_count: 0,
+            unique_viewers: 0
+          })
+          .returning('*');
 
-        try {
-          // Insert movie
-          const [newMovie] = await trx('movies')
-            .insert({
-              title,
-              slug,
-              short_description,
-              description,
-              release_year,
-              duration,
-              type,
-              image_id,
-              status,
-              view_count: 0,
-              unique_viewers: 0
-            })
-            .returning('*');
-
-          // Commit transaction
-          await trx.commit();
-
-          return res.status(201).json(
-            createApiResponse(newMovie, 201, undefined, 'Movie created successfully')
-          );
-
-        } catch (error) {
-          // Rollback transaction on error
-          await trx.rollback();
-          throw error;
-        }
+        return res.status(201).json(
+          createApiResponse(newMovie, 201, undefined, 'Movie created successfully')
+        );
 
       default:
         res.setHeader('Allow', ['GET', 'POST']);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Film, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -15,22 +15,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import movieTypes from '@/lib/configs/config.json';
+import slugify from 'slugify';
 
 export default function CreateMoviePage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
+    slug: "",
+    short_description: "",
     description: "",
     release_year: "",
     duration: "",
-    rating: "",
-    thumbnail: "",
-    video_url: "",
     type: "",
     status: 1
   });
+
+  useEffect(() => {
+    // Generate slug when title changes
+    const slug = slugify(formData.title, {
+      lower: true,
+      strict: true,
+      locale: 'vi'
+    });
+    setFormData(prev => ({
+      ...prev,
+      slug
+    }));
+  }, [formData.title]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,13 +61,20 @@ export default function CreateMoviePage() {
       });
 
       if (response.ok) {
+        toast({
+          title: "Thành công",
+          description: "Tạo phim mới thành công",
+        });
         router.push("/cms/movies");
       } else {
         throw new Error("Không thể tạo phim mới");
       }
     } catch (error) {
-      console.error("Lỗi khi tạo phim:", error);
-      alert("Không thể tạo phim. Vui lòng thử lại.");
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Không thể tạo phim. Vui lòng thử lại.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -110,6 +132,28 @@ export default function CreateMoviePage() {
             </div>
 
             <div className="space-y-2">
+              <label className="text-sm font-medium">Slug</label>
+              <Input
+                name="slug"
+                value={formData.slug}
+                onChange={handleChange}
+                required
+                readOnly
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Mô Tả Ngắn</label>
+              <Textarea
+                name="short_description"
+                value={formData.short_description}
+                onChange={handleChange}
+                required
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-2">
               <label className="text-sm font-medium">Mô Tả</label>
               <Textarea
                 name="description"
@@ -120,7 +164,7 @@ export default function CreateMoviePage() {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Năm Phát Hành</label>
                 <Select
@@ -160,17 +204,6 @@ export default function CreateMoviePage() {
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Xếp Hạng</label>
-                <Input
-                  name="rating"
-                  value={formData.rating}
-                  onChange={handleChange}
-                  required
-                  placeholder="VD: PG-13"
-                />
-              </div>
             </div>
 
             <div className="space-y-2">
@@ -191,28 +224,6 @@ export default function CreateMoviePage() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">URL Ảnh Thumbnail</label>
-              <Input
-                type="url"
-                name="thumbnail"
-                value={formData.thumbnail}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">URL Video</label>
-              <Input
-                type="url"
-                name="video_url"
-                value={formData.video_url}
-                onChange={handleChange}
-                required
-              />
             </div>
           </div>
 
