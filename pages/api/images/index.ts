@@ -2,19 +2,10 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import db from '../../../lib/db';
 import { createApiResponse, createPagination } from '../../../lib/helpers/apiResponse';
 import { Status } from '../../../lib/types/enumStatus';
-import { useAuth } from '../../../hooks/useAuth';
-import { log } from 'console';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   try {
-
-    const verified = await useAuth(req, res);
-    if (!verified || verified.payload.roleName !== 'admin') {
-        return res.status(401).json(
-            createApiResponse(null, 401, undefined, 'Unauthorized')
-        );
-    }
 
 
     switch (req.method) {

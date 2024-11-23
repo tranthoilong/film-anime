@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import localFont from 'next/font/local';
 import {Toaster} from "@/components/ui/toaster";
-
+import "./globals.css";
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: '--font-geist-sans',
@@ -19,8 +19,8 @@ export default function RootLayout({
   }, []);
 
   return (
-    <html 
-      lang="en" 
+    <html
+      lang="en"
       className={geistSans.variable}
       suppressHydrationWarning
     >

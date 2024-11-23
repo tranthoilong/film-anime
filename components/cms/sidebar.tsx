@@ -33,9 +33,9 @@ export default function Sidebar() {
       id: "users"
     },
     {
-      name: "Images",
+      name: "Media",
       icon: <Image className="w-5 h-5" />,
-      path: "/cms/images",
+      path: "/cms/media",
       id: "images"
     }
   ];
