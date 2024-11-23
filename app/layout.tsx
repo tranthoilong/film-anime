@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Toaster } from 'react-hot-toast';
 import localFont from 'next/font/local';
+import {Toaster} from "@/components/ui/toaster";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -26,16 +26,7 @@ export default function RootLayout({
     >
       <body suppressHydrationWarning>
         <main>{children}</main>
-        <Toaster 
-          position="top-right"
-          toastOptions={{
-            duration: 3000,
-            style: {
-              background: '#333',
-              color: '#fff',
-            },
-          }} 
-        />
+        <Toaster />
       </body>
     </html>
   );

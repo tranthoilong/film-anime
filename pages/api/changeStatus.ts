@@ -5,17 +5,17 @@ import { Status } from '../../lib/types/enumStatus';
 import { StatusCode } from '../../lib/types/statusCode';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'PUT') {
-    res.setHeader('Allow', ['PUT']);
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', ['POST']);
     return res.status(StatusCode.METHOD_NOT_ALLOWED).json(
       createApiResponse(null, StatusCode.METHOD_NOT_ALLOWED, undefined, `Method ${req.method} Not Allowed`)
     );
   }
 
   try {
-    const { tableName, id, status } = req.body;
+    const { table, id, status } = req.body;
 
-    if (!tableName || !id || status === undefined) {
+    if (!table || !id || status === undefined) {
       return res.status(StatusCode.BAD_REQUEST).json(
         createApiResponse(null, StatusCode.BAD_REQUEST, undefined, 'Missing required fields')
       );
@@ -29,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Update status
-    const [updatedRecord] = await db(tableName)
+    const [updatedRecord] = await db(table)
       .where('id', id)
       .update({
         status,

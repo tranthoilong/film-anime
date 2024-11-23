@@ -1,59 +1,35 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Image, Search, Plus, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { UploadButton } from "@uploadthing/react";
+import { StatusChanger } from "@/components/common/StatusChanger";
+import { Status } from "@/lib/types/enumStatus";
+import useSWR from "swr";
 
 interface ImageType {
   id: string;
   name: string;
   url: string;
   created_at: string;
+  status?: number;
 }
+
+const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function ImagesPage() {
   const router = useRouter();
-  const [images, setImages] = useState<ImageType[]>([]);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchImages();
-  }, [page, searchQuery]);
+  const { data, error, isLoading, mutate } = useSWR<{
+    data: ImageType[];
+    pagination: { totalPages: number };
+  }>(`/api/images?page=${page}&limit=12${searchQuery ? `&search=${searchQuery}` : ''}`, fetcher);
 
-  const fetchImages = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(`/api/images?page=${page}&limit=12${searchQuery ? `&search=${searchQuery}` : ''}`);
-      const result = await response.json();
-      
-      setImages(result.data);
-      setTotalPages(result.pagination.totalPages);
-    } catch (error) {
-      console.error("Error fetching images:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this image?")) {
-      try {
-        const response = await fetch(`/api/images/${id}`, {
-          method: "DELETE",
-        });
-
-        if (response.ok) {
-          fetchImages();
-        }
-      } catch (error) {
-        console.error("Error deleting image:", error);
-      }
-    }
-  };
+  const images = data?.data || [];
+  const totalPages = data?.pagination.totalPages || 1;
 
   const createImage = async (imageData: { url: string; name: string }) => {
     try {
@@ -107,7 +83,7 @@ export default function ImagesPage() {
               
               try {
                 await createImage(imageData);
-                fetchImages();
+                mutate();
                 alert("Upload Completed");
               } catch (error) {
                 alert("Failed to save image information");
@@ -150,12 +126,13 @@ export default function ImagesPage() {
                       <div className="text-white text-sm truncate flex-1">
                         {new Date(image.created_at).toLocaleDateString()}
                       </div>
-                      <button 
-                        onClick={() => handleDelete(image.id)}
-                        className="text-white hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
+                      <StatusChanger 
+                        id={image.id}
+                        status={Status.DELETED}
+                        table="images"
+                        onSuccess={() => mutate()}
+                        icon={<Trash2 className="h-4 w-4 text-red-500" />}
+                      />
                     </div>
                   </div>
                 </div>
